@@ -28,6 +28,13 @@ public class SlotBase extends SlotItemHandler {
     }
 
     @Override
+    @Nonnull
+    public ItemStack getItem() {
+        ItemStack stack = super.getItem();
+        return stack.isEmpty() ? ItemStack.EMPTY : stack.copy();
+    }
+
+    @Override
     public boolean mayPlace(@Nonnull ItemStack stack) {
         return itemHandler.canSet(handlerIndex, stack);
     }

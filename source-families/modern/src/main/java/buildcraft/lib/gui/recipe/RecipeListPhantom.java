@@ -17,10 +17,10 @@ public class RecipeListPhantom extends RecipeCollection {
         this.getRecipes().forEach(book::add);
         this.updateKnownRecipes(book);
         this.canCraft(new StackedContents() {
-        	   public boolean canCraft(Recipe<?> p_36476_, @Nullable IntList p_36477_) {
-        		      return true;
-        		   }
-        }, 65536, 65536, book);
+            public boolean canCraft(Recipe<?> p_36476_, @Nullable IntList p_36477_) {
+                return true;
+            }
+        }, 3, 3, book);
     }
 
     @Override

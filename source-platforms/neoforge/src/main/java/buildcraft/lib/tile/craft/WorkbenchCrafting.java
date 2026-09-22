@@ -420,13 +420,36 @@ public class WorkbenchCrafting extends TransientCraftingContainer {
             InventoryUtil.addToBestAcceptor(world, pos, null, leftover);
         }
         NonNullList<ItemStack> remainingStacks = currentRecipe.getRemainingItems(craftingInput);
+
+        // asCraftInput() trims empty rows and columns from the crafting grid.
+        // remainingStacks therefore uses the coordinates of that trimmed grid,
+        // while this container still uses the original workbench coordinates.
+        int minX = width;
+        int minY = height;
+
+        for (int slot = 0; slot < craftTableSize; slot++) {
+            if (!super.getItem(slot).isEmpty()) {
+                int x = slot % width;
+                int y = slot / width;
+
+                minX = Math.min(minX, x);
+                minY = Math.min(minY, y);
+            }
+        }
+
         for (int s = 0; s < remainingStacks.size(); s++) {
-            ItemStack inSlot = getItem(s);
+            int inputX = s % craftingInput.width();
+            int inputY = s / craftingInput.width();
+
+            int gridX = minX + inputX;
+            int gridY = minY + inputY;
+            int gridSlot = gridY * width + gridX;
+
+            ItemStack inSlot = getItem(gridSlot);
             ItemStack remaining = remainingStacks.get(s);
 
             if (!inSlot.isEmpty()) {
-                removeItem(s, 1);
-                inSlot = getItem(s);
+                removeItem(gridSlot, 1);
             }
 
             if (!remaining.isEmpty()) {
@@ -491,6 +514,16 @@ public class WorkbenchCrafting extends TransientCraftingContainer {
 		public boolean stillValid(Player p_38874_) {
 			return menu.stillValid(p_38874_);
 		}
+
+        @Override
+        public ItemStack getCarried() {
+            return menu.getCarried();
+        }
+
+        @Override
+        public void setCarried(ItemStack stack) {
+            menu.setCarried(stack);
+        }
 
 		@Override
 		public void fillCraftSlotsStackedContents(StackedContents stackedContents) {
