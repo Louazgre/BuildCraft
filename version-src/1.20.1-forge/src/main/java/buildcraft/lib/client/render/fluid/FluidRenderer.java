@@ -42,7 +42,6 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
-import net.minecraftforge.registries.ForgeRegistries;
 
 /** Can render 3D fluid cuboid's, up to 1x1x1 in size. Note that they *must* be contained within the 1x1x1 block space -
  * you can't use this to render off large multiblocks. Not thread safe -- this uses static variables so you should only
@@ -73,31 +72,13 @@ public class FluidRenderer {
         }
     }
 
-    /** Refreshes all fluid sprites after the 1.20 block atlas has been uploaded. */
+    /** Resets cached fluid sprites after the 1.20 block atlas has been uploaded. */
     public static void onTextureStitchPost(ClientAtlas.After event) {
         if (!InventoryMenu.BLOCK_ATLAS.equals(event.getAtlas().location())) {
             return;
         }
         clearSpriteCache();
         blockTexMap = event.getAtlas()::getSprite;
-
-        for (Fluid fluid : ForgeRegistries.FLUIDS.getValues()) {
-            IClientFluidTypeExtensions extensions = IClientFluidTypeExtensions.of(fluid);
-            ResourceLocation still = extensions.getStillTexture();
-            ResourceLocation flowing = extensions.getFlowingTexture();
-            if (still == null || flowing == null) {
-                continue;
-            }
-            String key = fluid.getFluidType().getDescriptionId();
-            TextureAtlasSprite stillSprite = blockTexMap.apply(still);
-            fluidSprites.get(FluidSpriteType.STILL).put(key, stillSprite);
-            fluidSprites.get(FluidSpriteType.FLOWING).put(key, blockTexMap.apply(flowing));
-
-            // Forge removed ClientAtlas.Before in 1.20, so dynamically injecting a generated frozen sprite into
-            // the block atlas is no longer supported. The frozen renderer still uses its repeated UV mapping, backed
-            // by the fluid's still sprite, which preserves the visual contract without private resource-manager hacks.
-            fluidSprites.get(FluidSpriteType.FROZEN).put(key, stillSprite);
-        }
     }
 
     private static void clearSpriteCache() {

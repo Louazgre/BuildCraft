@@ -447,6 +447,18 @@ class ClientIntegrations(unittest.TestCase):
         self.assertFalse((old_root / 'src/main/resources/buildcraft.jade.mixins.json').exists())
         self.assertFalse((old_root / 'src/main/java/buildcraft/lib/compat/jade/mixin/JadeEntrypointDedupMixin.java').exists())
 
+    def test_1201_fluid_sprites_are_resolved_lazily_after_atlas_stitch(self):
+        renderer = (ROOT / 'version-src/1.20.1-forge/src/main/java/buildcraft/lib/client/render/fluid/FluidRenderer.java').read_text()
+        stitch = renderer[renderer.index('public static void onTextureStitchPost'):renderer.index('private static void clearSpriteCache')]
+
+        # Querying every registered fluid during TextureStitchEvent.Post breaks adapters whose
+        # client texture state is initialized later. Keep atlas setup eager, but fluid lookup lazy.
+        self.assertIn('blockTexMap = event.getAtlas()::getSprite;', stitch)
+        self.assertNotIn('ForgeRegistries.FLUIDS', stitch)
+        self.assertNotIn('getStillTexture()', stitch)
+        self.assertNotIn('getFlowingTexture()', stitch)
+        self.assertIn('getStillTexture(stack)', renderer)
+        self.assertIn('getFlowingTexture(stack)', renderer)
 
 if __name__ == '__main__':
     unittest.main()
